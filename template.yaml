@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Get stories that near their due date from Clubhouse and send them to my email
+
+Parameters:
+  Version:
+    Type: String
+  User:
+    Type: String
+  Team:
+    Type: String
+  Feature:
+    Type: String
+    Default: acmeserverless
+  Stage:
+    Type: String
+    Default: dev
+  WavefrontURL:
+    Type: String
+  WavefrontToken:
+    Type: String
+  ClubhouseToken:
+    Type: String
+  FromMail:
+    Type: String
+  ToMail:
+    Type: String
+
+Resources:
+  getstories:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: getstories
+      Runtime: go1.x
+      CodeUri: bin/
+      FunctionName: GetStories
+      Description: Send stories by email
+      MemorySize: 256
+      Timeout: 180
+      Policies:
+        - AWSLambdaRole
+        - SESCrudPolicy
+      Environment:
+        Variables:
+          REGION: us-west-2
+          TOADDRESS: !Ref ToMail
+          FROMADDRESS: !Ref FromMail
+          APITOKEN: !Ref ClubhouseToken
+          DAYS: 7
+          OWNER: retgits
+          WAVEFRONT_ENABLED: true
+          WAVEFRONT_URL: !Ref WavefrontURL
+          WAVEFRONT_API_TOKEN: !Ref WavefrontToken
+      Events:
+        getstories:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 13 ? * * *) # Run at 1:00 pm (UTC) every day
+      Tags:
+        version: !Ref Version
+        author: !Ref User
+        team: !Ref Team
+        feature: !Ref Feature
+        region: !Ref AWS::Region
+      VersionDescription: !Ref Version
