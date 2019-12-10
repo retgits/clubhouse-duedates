@@ -74,7 +74,7 @@ clean: ## Remove all generated files
 
 local: ## Run SAM to test the Lambda function using Docker
 	echo
-	sam local start-api
+	sam local invoke getstories -e ./test/event.json
 	echo
 
 deploy: clean build ## Deploy the app to AWS Lambda
