@@ -39,7 +39,8 @@ Resources:
       Timeout: 180
       Policies:
         - AWSLambdaRole
-        - SESCrudPolicy
+        - SESCrudPolicy:
+            IdentityName: !Ref FromMail
       Environment:
         Variables:
           REGION: us-west-2
