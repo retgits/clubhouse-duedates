@@ -54,7 +54,7 @@ func handler(request events.CloudWatchEvent) error {
 	}
 
 	// TODO: Replace this with a proper text template
-	bodyContent := ""
+	bodyContent := "These are your Clubhouse stories for the next 7 days"
 
 	for _, story := range stories.Stories {
 		deadline, err := time.Parse("2006-01-02T15:04:05Z", story.Deadline)
@@ -62,6 +62,10 @@ func handler(request events.CloudWatchEvent) error {
 			fmt.Println("Error while parsing date :", err)
 		}
 		bodyContent = fmt.Sprintf("%s\n\n%s\nLink: %s\nDue on %s\n", bodyContent, story.Name, strings.ReplaceAll(story.AppURL, "\\", ""), deadline)
+	}
+
+	if len(stories.Stories) == 0 {
+		bodyContent = "You have no upcoming stories :("
 	}
 
 	// Create an AWS session
