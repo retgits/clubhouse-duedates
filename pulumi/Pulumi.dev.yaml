@@ -1,0 +1,25 @@
+config:
+  aws:profile: default ## The AWS CLI profile you want to use
+  aws:region: us-west-2 ## The AWS region you want to deploy to
+  clubhouse-duedates:config:
+    s3bucket: <my-bucket> ## the S3 bucket your code will be uploaded to
+    policies:
+      - <ARN of Send Email policy>
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+    envvars:
+      - REGION/us-west-2
+      - TOADDRESS/<your configured SES email addres>
+      - FROMADDRESS/<your configured SES email addres>
+      - APITOKEN/<your clubhouse API token>
+      - DAYS/7 ## The number of days to look ahead for stories
+      - OWNER/<your name> ## Your name
+      - WAVEFRONT_ENABLED/true
+      - WAVEFRONT_URL/WavefrontURL ## The Wavefront URL of your Wavefront instance
+      - WAVEFRONT_API_TOKEN/WavefrontToken ## The Wavefront token to connect to Wavefront
+    tags:
+      author: <your name>
+      feature: clubhouse-duedates
+      region: us-west-2
+      team: <your team>
+      version: v1

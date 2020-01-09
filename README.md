@@ -12,47 +12,73 @@
 * [A Wavefront API token](https://wavefront.com)
 * [A Clubhouse API token](https://help.clubhouse.io/hc/en-us/articles/205701199-Clubhouse-API-Tokens)
 * [An AWS account with access to SES](https://aws.amazon.com/ses/)
+* [A Pulumi account](https://pulumi.com)
 
 ## Installation
 
 ### Get sources
 
-To install you can clone this repository, and run `make deps` to get the [Go modules](./go.mod) this app relies on.
+To install you can clone this repository, and run `go get ./...` to get the [Go modules](./go.mod) this app relies on.
 
-### Using make
+### Using Pulumi
 
-There are a bunch of Makefile targets that help build and deploy the app
+Pulumi enables developers to write code in their favorite language, such as Go. This enables modern approaches to cloud applications and infrastructure without needing to learn yet-another YAML or DSL dialect.
 
-| Target  | Description                                                |
-|---------|------------------------------------------------------------|
-| build   | Build the executable for Lambda                            |
-| clean   | Remove all generated files                                 |
-| deploy  | Deploy the app to AWS Lambda                               |
-| deps    | Get the Go modules from the GOPROXY                        |
-| destroy | Deletes the CloudFormation stack and all created resources |
-| help    | Displays the help for each target (this message)           |
-| local   | Run SAM to test the Lambda function using Docker           |
-| test    | Run all unit tests and print coverage                      |
+### Email policy
+
+To be able to send emails you'll need to allow AWS Lambda to access SES. You can follow the "_Least Privilege Configuration_" and create a new policy with the below content and the ARN to the list of policies.
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ses:GetIdentityVerificationAttributes",
+                "ses:SendEmail",
+                "ses:SendRawEmail",
+                "ses:VerifyEmailIdentity"
+            ],
+            "Resource": "arn:aws:ses:us-west-2:<ACCOUNTID>:identity/<EMAILADDRESS>",
+            "Effect": "Allow"
+        }
+    ]
+}
+```
+
+The other option is to add "**arn:aws:iam::aws:policy/AmazonSESFullAccess**", which is an AWS managed policy with a lot more privileges but saves you from creating a new policy.
 
 ## Configuration
 
-Inside the [template.yaml](./template.yaml), there are a few configuration options that you can set:
+Inside the [Pulumi.dev.yaml](./pulumi/Pulumi.dev.yaml), there are a few configuration options that you can set:
 
 ```yaml
-Environment:
-    Variables:
-        REGION: us-west-2 ## The AWS region you want to deploy your app to
-        TOADDRESS: !Ref ToMail ## The email address used as the "to address", configured using parameters
-        FROMADDRESS: !Ref FromMail ## The email address used as the "from address", configured using parameters
-        APITOKEN: !Ref ClubhouseToken ## The API token for Clubhouse
-        DAYS: 7 ## The number of days to search for upcoming stories
-        OWNER: retgits ## The name of the person to search stories for
-        WAVEFRONT_ENABLED: true ## Send metrics to Wavefront or not
-        WAVEFRONT_URL: !Ref WavefrontURL ## The URL to connect to Wavefront
-        WAVEFRONT_API_TOKEN: !Ref WavefrontToken ## The API token for Wavefront
+config:
+  aws:profile: default ## The AWS CLI profile you want to use
+  aws:region: us-west-2 ## The AWS region you want to deploy to
+  clubhouse-duedates:config:
+    s3bucket: <my-bucket> ## the S3 bucket your code will be uploaded to
+    policies:
+      - <ARN of Send Email policy>
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+    envvars:
+      - REGION/us-west-2
+      - TOADDRESS/<your configured SES email addres>
+      - FROMADDRESS/<your configured SES email addres>
+      - APITOKEN/<your clubhouse API token>
+      - DAYS/7 ## The number of days to look ahead for stories
+      - OWNER/<your name> ## Your name
+      - WAVEFRONT_ENABLED/true
+      - WAVEFRONT_URL/WavefrontURL ## The Wavefront URL of your Wavefront instance
+      - WAVEFRONT_API_TOKEN/WavefrontToken ## The Wavefront token to connect to Wavefront
+    tags:
+      author: <your name>
+      feature: clubhouse-duedates
+      region: us-west-2
+      team: <your team>
+      version: v1
 ```
-
-The environment variables that have a `!Ref` in front of it, are configured using CloudFormation parameters. These parameters are at the top of the [template.yaml](./template.yaml) and are set in the Make targets.
 
 ## Contributing
 
